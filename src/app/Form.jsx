@@ -1,19 +1,39 @@
 'use client';
 import React from 'react';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 function Form() {
   const [todos, setTodos] = useState([]);
   const [input, setInput] = useState('');
   const [marked, setMarked] = useState(false);
 
+  // load todos from localStorage
+  useEffect(() => {
+    const stored = localStorage.getItem('todos');
+    if (stored) {
+      try {
+        setTodos(JSON.parse(stored));
+      } catch {
+        setTodos([]);
+      }
+    }
+  }, []);
+
+  // keep localStorage in sync with todos
+  useEffect(() => {
+    localStorage.setItem('todos', JSON.stringify(todos));
+  }, [todos]);
+
   const handleSubmit = (e) => {
     e.preventDefault();
     const value = input.trim();
     if (value) {
       // add new todo to the list
-      setTodos((prev) => [...prev, value]);
+      setTodos((prev) => {
+        const updated = [...prev, value];
+        return updated;
+      });
       setInput('');
     }
   };
@@ -21,7 +41,8 @@ function Form() {
   const handleDelete = (index) => {
     setTodos((prev) => {
       // if index is not equal to i, keep the item
-      return prev.filter((_, i) => i !== index);
+      const updated = prev.filter((_, i) => i !== index);
+      return updated;
     });
   };
 
