@@ -1,5 +1,7 @@
+'use client';
 import Image from 'next/image';
 import Form from './Form';
+import { TodoProvider } from './TodoContext';
 //import { useState } from 'react';
 
 export default function Home() {
@@ -8,7 +10,9 @@ export default function Home() {
 
   return (
     <div className="">
-      <Form />
+      <TodoProvider>
+        <Form />
+      </TodoProvider>
     </div>
   );
 }

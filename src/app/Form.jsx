@@ -5,56 +5,30 @@ import {
   useEffect,
   useLayoutEffect,
   useContext,
+  useMemo,
 } from 'react';
 import { useTheme } from './ThemeContext';
+import { useTodos } from './TodoContext';
 
 function Form() {
-  const [todos, setTodos] = useState([
-    { text: 'Flying to Hanoi, Vietnam', checked: true },
-    { text: 'Do some tasks in Old Quarter', checked: true },
-    { text: 'Build a ToDo App', checked: false },
-  ]);
   const [input, setInput] = useState('');
-  const [counter, setCounter] = useState(0);
+  const { todos, setTodos, doneCount } = useTodos();
   const { theme, setTheme } = useTheme();
 
-  // load todos from localStorage
-  useEffect(() => {
-    const stored = localStorage.getItem('todos');
-    if (stored) {
-      try {
-        const parsed = JSON.parse(stored);
-        // simple migration for old data structure
-        if (parsed.length > 0 && typeof parsed[0] === 'string') {
-          setTodos(
-            parsed.map((todoText) => ({
-              text: todoText,
-              checked: false,
-            }))
-          );
-        } else if (Array.isArray(parsed)) {
-          setTodos(parsed);
-        }
-      } catch {
-        setTodos([]);
-      }
-    }
-  }, []);
-
-  // keep localStorage in sync with todos
-  useEffect(() => {
-    localStorage.setItem('todos', JSON.stringify(todos));
-
-    // update counter
-    const doneCount = todos.filter((todo) => todo.checked).length;
-    setCounter(doneCount);
-  }, [todos]);
+  // 🧩 useMemo for derived visual data
+  const total = todos.length;
+  const progress = useMemo(() => {
+    if (total === 0) return 0;
+    return Math.round((doneCount / total) * 100);
+  }, [doneCount, total]);
 
   useLayoutEffect(() => {
     document.body.style.backgroundColor =
       theme === 'dark' ? '#121212' : '#ffffff';
     document.body.style.color = theme === 'dark' ? '#f5f5f5' : '#111';
-  }, [theme]);
+
+    document.title = `✅ ${doneCount} / ${total} tasks done`;
+  }, [theme, doneCount, total]);
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -108,7 +82,7 @@ function Form() {
         <div className="p-4 mt-4">
           ️{' '}
           <span className="text-sm text-gray-600 text-center flex flex-col">
-            You have {counter} / {todos.length} tasks done
+            You have {doneCount} / {total} tasks done ({progress}%)
           </span>
           <ul className="mt-4 max-h-[300px] overflow-auto">
             {todos.map((todo, index) => (
