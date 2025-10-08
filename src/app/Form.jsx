@@ -1,21 +1,23 @@
 'use client';
 import React from 'react';
-
 import { useState, useEffect } from 'react';
 
 function Form() {
   const [todos, setTodos] = useState([]);
   const [input, setInput] = useState('');
-  const [marked, setMarked] = useState(false);
+  const [checked, setChecked] = useState([]); // array of booleans for each todo
 
   // load todos from localStorage
   useEffect(() => {
     const stored = localStorage.getItem('todos');
     if (stored) {
       try {
-        setTodos(JSON.parse(stored));
+        const parsed = JSON.parse(stored);
+        setTodos(parsed);
+        setChecked(Array(parsed.length).fill(false));
       } catch {
         setTodos([]);
+        setChecked([]);
       }
     }
   }, []);
@@ -23,27 +25,35 @@ function Form() {
   // keep localStorage in sync with todos
   useEffect(() => {
     localStorage.setItem('todos', JSON.stringify(todos));
+    // keep checked array in sync with todos length
+    setChecked((prev) => {
+      if (todos.length > prev.length) {
+        // add false for new todos
+        return [
+          ...prev,
+          ...Array(todos.length - prev.length).fill(false),
+        ];
+      } else if (todos.length < prev.length) {
+        // remove checked for deleted todos
+        return prev.slice(0, todos.length);
+      }
+      return prev;
+    });
   }, [todos]);
 
   const handleSubmit = (e) => {
     e.preventDefault();
     const value = input.trim();
     if (value) {
-      // add new todo to the list
-      setTodos((prev) => {
-        const updated = [...prev, value];
-        return updated;
-      });
+      setTodos((prev) => [...prev, value]);
       setInput('');
     }
   };
 
   const handleDelete = (index) => {
-    setTodos((prev) => {
-      // if index is not equal to i, keep the item
-      const updated = prev.filter((_, i) => i !== index);
-      return updated;
-    });
+    // remove todo at index
+    setTodos((prev) => prev.filter((_, i) => i !== index));
+    setChecked((prev) => prev.filter((_, i) => i !== index));
   };
 
   return (
@@ -71,8 +81,14 @@ function Form() {
             <span>{todo}</span>
             <input
               type="checkbox"
-              checked={marked}
-              onChange={() => setMarked((prev) => !prev)}
+              checked={checked[index] || false}
+              onChange={() =>
+                setChecked((prev) => {
+                  const arr = [...prev];
+                  arr[index] = !arr[index];
+                  return arr;
+                })
+              }
             />
             <button
               className="ml-2 px-2 py-1 bg-red-300 text-black rounded"
