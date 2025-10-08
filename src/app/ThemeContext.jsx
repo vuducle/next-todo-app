@@ -20,7 +20,7 @@ export function ThemeProvider({ children }) {
   // 💾 Persist to localStorage whenever it changes
   useLayoutEffect(() => {
     localStorage.setItem('theme', theme);
-    document.documentElement.className = theme; // apply immediately to <html>
+    document.documentElement.className = theme;
   }, [theme]);
 
   return (
