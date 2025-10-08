@@ -1,6 +1,12 @@
 'use client';
 import React from 'react';
-import { useState, useEffect } from 'react';
+import {
+  useState,
+  useEffect,
+  useLayoutEffect,
+  useContext,
+} from 'react';
+import { useTheme } from './ThemeContext';
 
 function Form() {
   const [todos, setTodos] = useState([
@@ -10,6 +16,7 @@ function Form() {
   ]);
   const [input, setInput] = useState('');
   const [counter, setCounter] = useState(0);
+  const { theme, setTheme } = useTheme();
 
   // load todos from localStorage
   useEffect(() => {
@@ -42,6 +49,12 @@ function Form() {
     const doneCount = todos.filter((todo) => todo.checked).length;
     setCounter(doneCount);
   }, [todos]);
+
+  useLayoutEffect(() => {
+    document.body.style.backgroundColor =
+      theme === 'dark' ? '#121212' : '#ffffff';
+    document.body.style.color = theme === 'dark' ? '#f5f5f5' : '#111';
+  }, [theme]);
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -97,7 +110,7 @@ function Form() {
           <span className="text-sm text-gray-600 text-center flex flex-col">
             You have {counter} / {todos.length} tasks done
           </span>
-          <ul className="mt-4">
+          <ul className="mt-4 max-h-[300px] overflow-auto">
             {todos.map((todo, index) => (
               <li
                 key={index}
@@ -130,7 +143,7 @@ function Form() {
                     width="16"
                     height="16"
                     fill="currentColor"
-                    class="bi bi-trash"
+                    className="bi bi-trash"
                     viewBox="0 0 16 16"
                   >
                     <path d="M5.5 5.5A.5.5 0 0 1 6 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5m2.5 0a.5.5 0 0 1 .5.5v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5m3 .5a.5.5 0 0 0-1 0v6a.5.5 0 0 0 1 0z" />
@@ -140,6 +153,16 @@ function Form() {
               </li>
             ))}
           </ul>
+        </div>
+        <div className="flex justify-center mt-4">
+          <button
+            onClick={() =>
+              setTheme(theme === 'dark' ? 'light' : 'dark')
+            }
+            className="px-4 py-2 rounded bg-gray-300 hover:bg-gray-400"
+          >
+            {theme === 'dark' ? 'Dark' : 'Light'}
+          </button>
         </div>
       </div>
     </div>
