@@ -1,19 +1,23 @@
 'use client';
 import React from 'react';
+import { useState, useLayoutEffect, useMemo } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
 import {
-  useState,
-  useEffect,
-  useLayoutEffect,
-  useContext,
-  useMemo,
-} from 'react';
-import { useTheme } from './ThemeContext';
-import { useTodos } from './TodoContext';
+  addTodo,
+  toggleTodo,
+  deleteTodo,
+} from '../lib/redux/features/todoSlice';
+import { toggleTheme } from '../lib/redux/features/themeSlice';
 
 function Form() {
   const [input, setInput] = useState('');
-  const { todos, setTodos, doneCount } = useTodos();
-  const { theme, setTheme } = useTheme();
+  const dispatch = useDispatch();
+  const todos = useSelector((state) => state.todos?.todos ?? []);
+  const theme = useSelector((state) => state.theme?.theme ?? 'light');
+  const doneCount = useMemo(
+    () => todos.filter((todo) => todo.completed).length,
+    [todos]
+  );
 
   // 🧩 useMemo for derived visual data
   const total = todos.length;
@@ -22,6 +26,7 @@ function Form() {
     return Math.round((doneCount / total) * 100);
   }, [doneCount, total]);
 
+  // 🧠 useLayoutEffect to avoid flicker
   useLayoutEffect(() => {
     document.body.style.backgroundColor =
       theme === 'dark' ? '#121212' : '#ffffff';
@@ -34,20 +39,17 @@ function Form() {
     e.preventDefault();
     const value = input.trim();
     if (value) {
-      setTodos((prev) => [...prev, { text: value, checked: false }]);
+      dispatch(addTodo(value));
       setInput('');
     }
   };
 
-  const handleDelete = (index) => {
-    // remove todo at index
-    setTodos((prev) => prev.filter((_, i) => i !== index));
+  const handleDelete = (todoId) => {
+    dispatch(deleteTodo(todoId));
   };
 
-  const handleCheck = (index) => {
-    const newTodos = [...todos];
-    newTodos[index].checked = !newTodos[index].checked;
-    setTodos(newTodos);
+  const handleCheck = (todoId) => {
+    dispatch(toggleTodo(todoId));
   };
 
   return (
@@ -85,24 +87,24 @@ function Form() {
             You have {doneCount} / {total} tasks done ({progress}%)
           </span>
           <ul className="mt-4 max-h-[300px] overflow-auto">
-            {todos.map((todo, index) => (
+            {todos.map((todo) => (
               <li
-                key={index}
+                key={todo.id}
                 className="flex items-center justify-between mb-2 rounded-xl border border-gray-300 p-2"
               >
                 <div className="flex items-center">
                   <input
                     type="checkbox"
-                    checked={todo.checked}
-                    onChange={() => handleCheck(index)}
+                    checked={todo.completed}
+                    onChange={() => handleCheck(todo.id)}
                     className="h-5 w-5 mr-3"
                   />
                   <span
-                    style={{
-                      textDecoration: todo.checked
-                        ? 'line-through'
-                        : 'none',
-                    }}
+                    className={`${
+                      todo.completed
+                        ? 'line-through text-gray-400'
+                        : ''
+                    }`}
                   >
                     {todo.text}
                   </span>
@@ -110,7 +112,7 @@ function Form() {
 
                 <button
                   className="ml-2 px-2 py-2 bg-red-300 text-black rounded cursor-pointer hover:bg-red-400 transition"
-                  onClick={() => handleDelete(index)}
+                  onClick={() => handleDelete(todo.id)}
                 >
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
@@ -130,9 +132,7 @@ function Form() {
         </div>
         <div className="flex justify-center mt-4">
           <button
-            onClick={() =>
-              setTheme(theme === 'dark' ? 'light' : 'dark')
-            }
+            onClick={() => dispatch(toggleTheme())}
             className="px-4 py-2 rounded bg-gray-300 hover:bg-gray-400"
           >
             {theme === 'dark' ? 'Light' : 'Dark'}

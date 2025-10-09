@@ -1,6 +1,6 @@
 import { Be_Vietnam_Pro } from 'next/font/google';
 import './globals.css';
-import { ThemeProvider } from './ThemeContext';
+import { Providers } from '../lib/redux/provider';
 
 const beVietnamPro = Be_Vietnam_Pro({
   variable: '--font-be-vietnam-pro',
@@ -28,7 +28,7 @@ export default function RootLayout({ children }) {
       <body
         className={`${beVietnamPro.variable} antialiased bg-white text-black`}
       >
-        <ThemeProvider>{children}</ThemeProvider>
+        <Providers>{children}</Providers>
       </body>
     </html>
   );
